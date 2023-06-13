@@ -1,0 +1,25 @@
+[package]
+name = "yumI"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+axum = "0.6.18"
+dotenv = "0.15.0"
+serde = {version = "1.0.164",features = ["derive"]}
+serde_json = "1.0.96"
+sqlx = {version = "0.6.3",features = ["runtime-tokio-rustls", "postgres"]}
+tokio = {version = "1.28.2", features = ["full"]}
+tower-http = {version = "0.4.0",features = ["fs"]}
+sha2 = {version = "0.10.6",default-features = false}
+base64ct = {version = "1.6.0",features = ["alloc"]}
+tower-cookies = "0.9.0"
+jsonwebtoken = "8.3.0"
+time = "0.3.22"
+
+
+[dev-dependencies]
+anyhow = "1"
+httpc-test = "0.1.4"
