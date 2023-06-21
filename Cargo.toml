@@ -12,12 +12,19 @@ serde = {version = "1.0.164",features = ["derive"]}
 serde_json = "1.0.96"
 sqlx = {version = "0.6.3",features = ["runtime-tokio-rustls", "postgres"]}
 tokio = {version = "1.28.2", features = ["full"]}
-tower-http = {version = "0.4.0",features = ["fs"]}
+tower-http = {version = "0.4.0",features = ["full"]}
 sha2 = {version = "0.10.6",default-features = false}
 base64ct = {version = "1.6.0",features = ["alloc"]}
 tower-cookies = "0.9.0"
 jsonwebtoken = "8.3.0"
 time = "0.3.22"
+tracing = "0.1.37"
+tracing-subscriber = {version = "0.3.17"}
+clap = { version = "4.3.5", features = ["derive"] }
+tower = "0.4.13"
+log = "0.4.19"
+chrono = "0.4.26"
+
 
 
 [dev-dependencies]

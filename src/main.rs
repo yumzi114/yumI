@@ -1,47 +1,89 @@
-use std::{net::SocketAddr, env};
+use std::{net::{IpAddr, Ipv6Addr,Ipv4Addr,SocketAddr}, env, path::Path, sync::Mutex};
+use std::str::FromStr;
 use dotenv::dotenv;
-use axum::{Router, routing::{get, get_service}, response::{Html, IntoResponse, Response}, extract::Query, middleware,};
+use axum::{Router, routing::{get, get_service}, response::{Html, IntoResponse, Response}, extract::{Query}, middleware, http::StatusCode, body::{boxed, Body},};
 use serde::Deserialize;
 use tower_cookies::{CookieManagerLayer};
-use tower_http::services::ServeDir;
+use tower::{ServiceBuilder, ServiceExt};
+use tower_http::trace::TraceLayer;
+// use tower_http::services::ServeDir;
+use tracing_subscriber::{Registry,Layer,prelude::*};
+use tower_http::services::{ServeDir, ServeFile};
+use clap::Parser;
+use std::fs::File;
+use chrono;
 pub use self::error::{Error,Result};
 mod error;
 mod web;
 mod yumdb;
 mod token;
+mod model;
 // use std::thread;
-enum UserRole {
-    OWNER(String),
-    ADMIN(String),
-    USER(String),
-    VIEWER(String),
+#[derive(Parser, Debug)]
+#[clap(name = "server", about = "server info")]
+struct Opt {
+    #[clap(short = 'l', long = "log", default_value = "debug")]
+    log_level: String,
+    /// set the listen addr
+    #[clap(short = 'a', long = "addr", default_value = "localhost")]
+    addr: String,
+    /// set the listen port
+    #[clap(short = 'p', long = "port", default_value = "8080")]
+    port: u16,
 }
 #[derive(Debug,Deserialize)]
 struct HelloParams{
     name:Option<String>,
     // role:Option<UserRole::VIEWER(String::de)>
 }
+
 #[tokio::main]
 async fn main() {
     // let mut buffer = [0; 512];
-    // dotenv().ok();
+    let opt = Opt::parse();
+    let sock_addr = SocketAddr::from((
+        IpAddr::from_str(opt.addr.as_str()).unwrap_or(IpAddr::V4(Ipv4Addr::LOCALHOST)),
+        opt.port,
+    ));
+    if !cfg!(debug_assertions){
+        let date = chrono::offset::Local::now().date_naive().to_string();
+        let file = File::create(Path::new(format!("log/{date}.log").as_str())).unwrap();
+        let json_log = tracing_subscriber::fmt()
+            .with_writer(Mutex::new(file))
+            .finish();
+        json_log.init();
+    };
+    
+    if std::env::var("RUST_LOG").is_err() {
+        std::env::set_var("RUST_LOG", format!("{},hyper=info,mio=info", opt.log_level))
+    };
+    
+    // tracing_subscriber::fmt::
+    // tracing_subscriber::fmt::init();
     let routes_all =Router::new()
     .merge(routes_main())
     .merge(web::routes_login::routes())
     .layer(middleware::map_response(main_response_mapper))
     .layer(CookieManagerLayer::new())
+    .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
     .fallback_service(routes_static());
-
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
-    println!("->> LISTENING on {addr}\n");
-    axum::Server::bind(&addr)
+    
+    // let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+    if cfg!(debug_assertions){
+        log::info!("->> LISTENING on {}\n", sock_addr);
+        // println!("->> LISTENING on {sock_addr}\n");
+    }
+    axum::Server::bind(&sock_addr)
     .serve(routes_all.into_make_service())
     .await
     .unwrap();
 }
+
+
 fn routes_main()->Router{
     Router::new()
-    .route("/",get(main_handler),)
+    // .route("/",get(main_handler),)
+    .route("/", get_service(ServeFile::new("./static/dist/index.html")))
 }
 async fn main_response_mapper(res:Response)->Response{
     println!("->> {:<12} - main_response_mapper","RES_MAPPER");
@@ -52,6 +94,9 @@ async fn main_handler(Query(params):Query<HelloParams>)-> impl IntoResponse{
     println!("->> {:<12} - main_handler - {params:?}","HANDLER");
     let name = params.name.as_deref().unwrap_or("World!");
     Html(format!("Hello <strong>{name}</strong>"))
+    // ServeFile::new("static/hello.html")
+    
+    // Html()
 }
 fn routes_static()->Router{
     Router::new().nest_service("/static", get_service(ServeDir::new("./static/")))

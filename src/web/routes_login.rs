@@ -19,31 +19,37 @@ struct LoginPayload{
 
 async fn api_login(cookies:Cookies,payload: Json<LoginPayload>)->Result<Json<Value>>{
     dotenv().ok();
-    // let default_cost =env::var("HASH_CONST").unwrap().parse().unwrap();
     let temp= payload.email.as_str();
-    // let mut db_hash = String::new();
-    let mut valid = false;
-    println!("->> {:<12} - api_login","HANDLER");
-    if let Ok(data)=user_get(temp,&payload.psw).await{
-        valid=data;
-        if !valid {
+    if cfg!(debug_assertions){
+        println!("->> {:<12} - api_login","HANDLER");
+    }
+    
+    if let Ok(userinfo)=user_get(temp,&payload.psw).await{
+        // valid=data.result;
+        if userinfo.result {
+            let tempss = userinfo.id.to_string().as_str();
+            let token = get_token(
+                userinfo.id.to_string().as_str(),
+                userinfo.role_id.to_string().as_str()
+            );
+            if let Err(_)=token{
+                return Err(Error::TokenError);
+            }
+            cookies.add(Cookie::new(token::AUTH_TOKEN, token.unwrap()));
+            let body = Json(json!({
+                "result":{
+                    "email":&userinfo.email,
+                    "success":&userinfo.result
+                }
+            }));
+            return Ok(body);
+        } else {
             return  Err(Error::LoginFail);
         }
     }else{
         return Err(Error::NotFoundUser);
     }
-    let token = get_token("1","permi");
-    if let Err(_)=token{
-        return Err(Error::TokenError);
-    }
-    cookies.add(Cookie::new(token::AUTH_TOKEN, token.unwrap()));
-    let body = Json(json!({
-        "result":{
-            "email":&payload.email,
-            "success":&valid
-        }
-    }));
-    Ok(body) 
+     
 }
 // fn hash_password<D: Digest>(password: &str, salt: &str, output: &mut [u8]) {
 //     let mut hasher = D::new();

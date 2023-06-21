@@ -1,0 +1,10 @@
+[2m2023-06-21T15:43:06.037486Z[0m [32m INFO[0m [2msqlx::query[0m[2m:[0m SELECT * FROM users …; rows affected: 0, rows returned: 1, elapsed: 708.992µs
+
+SELECT
+  *
+FROM
+  users
+WHERE
+  email = 'yumzi114@gmail.com'
+  
+[2m2023-06-21T15:43:06.037570Z[0m [31mERROR[0m [2mtower_http::trace::on_failure[0m[2m:[0m response failed [3mclassification[0m[2m=[0mStatus code: 500 Internal Server Error [3mlatency[0m[2m=[0m3 ms

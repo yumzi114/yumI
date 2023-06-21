@@ -8,6 +8,8 @@ pub enum Error {
     NotFoundUser,
     TokenError,
     LoginFail,
+    StaticServiceError,
+    TicketDeleteFailIdNotFoun {id: u64},
 }
 impl  IntoResponse for Error{
     fn into_response(self) -> Response {
