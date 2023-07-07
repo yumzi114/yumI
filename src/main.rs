@@ -1,7 +1,7 @@
 use std::{net::{IpAddr, Ipv6Addr,Ipv4Addr,SocketAddr}, env, path::Path, sync::Mutex};
 use std::str::FromStr;
 use dotenv::dotenv;
-use axum::{Router, routing::{get, get_service}, response::{Html, IntoResponse, Response}, extract::{Query}, middleware, http::StatusCode, body::{boxed, Body},};
+use axum::{Router, routing::{get, get_service}, response::{Html, IntoResponse, Response}, extract::{Query}, middleware, http::{StatusCode, Method}, body::{boxed, Body},};
 use serde::Deserialize;
 use tower_cookies::{CookieManagerLayer};
 use tower::{ServiceBuilder, ServiceExt};
@@ -9,6 +9,7 @@ use tower_http::trace::TraceLayer;
 // use tower_http::services::ServeDir;
 use tracing_subscriber::{Registry,Layer,prelude::*};
 use tower_http::services::{ServeDir, ServeFile};
+use tower_http::cors::{CorsLayer, Any};
 use clap::Parser;
 use std::fs::File;
 use chrono;
@@ -17,6 +18,7 @@ mod error;
 mod web;
 mod yumdb;
 mod token;
+mod apis;
 mod model;
 // use std::thread;
 #[derive(Parser, Debug)]
@@ -57,14 +59,19 @@ async fn main() {
     if std::env::var("RUST_LOG").is_err() {
         std::env::set_var("RUST_LOG", format!("{},hyper=info,mio=info", opt.log_level))
     };
-    
+    let cors = CorsLayer::new()
+    .allow_methods(vec![Method::GET, Method::POST, Method::OPTIONS])
+    .allow_origin(Any)
+    .allow_credentials(false);
     // tracing_subscriber::fmt::
     // tracing_subscriber::fmt::init();
     let routes_all =Router::new()
     .merge(routes_main())
+    .merge(apis::package::routes())
     .merge(web::routes_login::routes())
     .layer(middleware::map_response(main_response_mapper))
     .layer(CookieManagerLayer::new())
+    .layer(cors)
     .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
     .fallback_service(routes_static());
     
@@ -86,8 +93,10 @@ fn routes_main()->Router{
     .route("/", get_service(ServeFile::new("./static/dist/index.html")))
 }
 async fn main_response_mapper(res:Response)->Response{
-    println!("->> {:<12} - main_response_mapper","RES_MAPPER");
-    println!();
+    if cfg!(debug_assertions){
+        println!("->> {:<12} - main_response_mapper","RES_MAPPER");
+        println!();
+    };
     res
 }
 async fn main_handler(Query(params):Query<HelloParams>)-> impl IntoResponse{

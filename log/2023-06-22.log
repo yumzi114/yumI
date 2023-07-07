@@ -1,10 +1,40 @@
-[2m2023-06-21T15:43:06.037486Z[0m [32m INFO[0m [2msqlx::query[0m[2m:[0m SELECT * FROM users …; rows affected: 0, rows returned: 1, elapsed: 708.992µs
+[2m2023-06-22T02:53:47.593706Z[0m [32m INFO[0m [2msqlx::query[0m[2m:[0m SELECT * FROM packagemanager …; rows affected: 1, rows returned: 1, elapsed: 770.236µs
 
 SELECT
   *
 FROM
-  users
+  packagemanager
 WHERE
-  email = 'yumzi114@gmail.com'
+  manager LIKE '%%'
+  AND description LIKE '%%'
   
-[2m2023-06-21T15:43:06.037570Z[0m [31mERROR[0m [2mtower_http::trace::on_failure[0m[2m:[0m response failed [3mclassification[0m[2m=[0mStatus code: 500 Internal Server Error [3mlatency[0m[2m=[0m3 ms
+[2m2023-06-22T02:53:51.107650Z[0m [32m INFO[0m [2msqlx::query[0m[2m:[0m SELECT * FROM packagemanager …; rows affected: 1, rows returned: 1, elapsed: 433.408µs
+
+SELECT
+  *
+FROM
+  packagemanager
+WHERE
+  manager LIKE '%%'
+  AND description LIKE '%%'
+  
+[2m2023-06-22T02:58:20.921694Z[0m [32m INFO[0m [2msqlx::query[0m[2m:[0m SELECT * FROM packagemanager …; rows affected: 1, rows returned: 1, elapsed: 846.624µs
+
+SELECT
+  *
+FROM
+  packagemanager
+WHERE
+  manager LIKE '%%'
+  AND description LIKE '%%'
+  
+[2m2023-06-22T02:59:44.194124Z[0m [32m INFO[0m [2msqlx::query[0m[2m:[0m SELECT * FROM packagemanager …; rows affected: 1, rows returned: 1, elapsed: 626.799µs
+
+SELECT
+  *
+FROM
+  packagemanager
+WHERE
+  manager LIKE '%%'
+  AND description LIKE '%arch%'
+  

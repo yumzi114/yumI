@@ -8,6 +8,7 @@ pub enum Error {
     NotFoundUser,
     TokenError,
     LoginFail,
+    DBNotFound,
     StaticServiceError,
     TicketDeleteFailIdNotFoun {id: u64},
 }

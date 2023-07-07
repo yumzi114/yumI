@@ -3,7 +3,7 @@ var filesToCache = [
   './',
   './index.html',
   './yumW.js',
-  './yumW.wasm',
+  './yumW_gb.wasm',
   './koryungddal.ttf',
 ];
 
